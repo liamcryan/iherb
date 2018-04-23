@@ -21,5 +21,7 @@ iHerb has many categories and there is an api to obtain products from each of th
 Installation
 ============
 
-pip install git+https://github.com/liamcryan/iherb --process-dependency-links
+.. code-block::
+
+    pip install git+https://github.com/liamcryan/iherb --process-dependency-links --trusted-host github.com
 
