@@ -1,2 +1,4 @@
 .idea/
 venv/
+iherb.egg-info/
+dist/
