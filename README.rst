@@ -30,5 +30,5 @@ Notes
 =====
 
 * I could not seem to properly specify dependency_link in setup.py file, hence the need for 2 pip installs
-* The version of requests-html is a fork of the original and the library will not work correctly with the
+* The version of requests-html is a fork of the original and this library will not work correctly with the
 original if requesting more than 24 items per category.
