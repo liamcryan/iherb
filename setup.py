@@ -21,7 +21,7 @@ setup(name=NAME,
       packages=["iherb"],
       install_requires=["requests-html==0.9.0"],
       include_package_data=True,
-      dependency_links=["http://github.com/liamcryan/requests-html/tarball/master#egg=requests-html-0.9.0"],
+      dependency_links=["http://github.com/liamcryan/requests-html/tarball/master#egg=requests_html-0.9.0"],
       keywords="iherb products",
       python_requires='>=3.6.0',
       classifiers=["Programming Language :: Python :: 3.6"])
