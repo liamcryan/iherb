@@ -1,0 +1,14 @@
+Metadata-Version: 1.2
+Name: iherb
+Version: 0.0.0
+Summary: Get products from iHerb
+Home-page: https://github.com/liamcryan/iherb
+Author: Liam Cryan
+Author-email: data.handyman.01@gmail.com
+License: MIT
+Download-URL: https://github.com/liamcryan/iherb/archive/0.0.0.tar.gz
+Description: Get products from iHerb
+Keywords: iherb products
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.6
+Requires-Python: >=3.6.0

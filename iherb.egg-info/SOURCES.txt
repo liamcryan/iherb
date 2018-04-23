@@ -1,0 +1,14 @@
+MANIFEST.in
+README.rst
+setup.py
+iherb/__init__.py
+iherb/api.py
+iherb/categories.py
+iherb/models.py
+iherb/products.py
+iherb/url.py
+iherb.egg-info/PKG-INFO
+iherb.egg-info/SOURCES.txt
+iherb.egg-info/dependency_links.txt
+iherb.egg-info/requires.txt
+iherb.egg-info/top_level.txt

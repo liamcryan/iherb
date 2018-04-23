@@ -23,8 +23,7 @@ Installation
 
 .. code-block::
 
-    pip install git+https://github.com/liamcryan/iherb --process-dependency-links --trusted-host github.com
+    pip install git+https://github.com/liamcryan/requests-html.git
+    pip install git+https://github.com/liamcryan/iherb.git
 
-Note: requests-html did not paginate correctly and I forked a version which this package uses.  Running the above
-command does not install my version of requests-html, so this library won't work yet for >24 products per category.
-
+Note: i could not seem to properly specify dependency_link in setup.py file, hence the need for 2 pips
