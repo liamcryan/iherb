@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 from requests_html import HTML
 
 from iherb.url import IHerbURL
@@ -7,28 +8,28 @@ from iherb.utils import parse_html_text_btw
 
 class Product(object):
     def __init__(self,
-                 title: str,
                  url: str,
-                 price: float,
-                 price_discount: float,
-                 shipping_saver: bool,
-                 iherb_exclusive: bool,
-                 save_in_cart: int,
-                 in_stock: bool,
-                 special: bool,
-                 trial_product: bool,
-                 rating_count: int,
-                 stars: float,
-                 clearance: bool,
-                 free_shipping_over: int,
-                 best_seller: bool = False,
-                 loyalty_credit: int = 0,
-                 brand: str = None,
-                 upc: str = None,
-                 expiration_date: datetime.datetime = None,
-                 shipping_weight: float = None,
-                 package_qty: str = None,
-                 dimensions: str = None):
+                 title: Optional[str] = None,
+                 price: Optional[float] = None,
+                 price_discount: Optional[float] = None,
+                 shipping_saver: Optional[bool] = None,
+                 iherb_exclusive: Optional[bool] = None,
+                 save_in_cart: Optional[int] = None,
+                 in_stock: Optional[bool] = None,
+                 special: Optional[bool] = None,
+                 trial_product: Optional[bool] = None,
+                 rating_count: Optional[int] = None,
+                 stars: Optional[float] = None,
+                 clearance: Optional[bool] = None,
+                 free_shipping_over: Optional[int] = None,
+                 best_seller: Optional[bool] = None,
+                 loyalty_credit: Optional[int] = None,
+                 brand: Optional[str] = None,
+                 upc: Optional[str] = None,
+                 expiration_date: Optional[datetime.datetime] = None,
+                 shipping_weight: Optional[float] = None,
+                 package_qty: Optional[str] = None,
+                 dimensions: Optional[str] = None):
 
         self.title = title
         self.url = url
@@ -54,76 +55,144 @@ class Product(object):
         self.dimensions = dimensions
 
     def __repr__(self):
-        return "<Product UPC{} ${}>".format(self.upc, self.price)
+        return "<Product url: {}>".format(self.url)
 
     def populate(self) -> "Product":
         iherb_product_url = IHerbURL(self.url)
         r = iherb_product_url.get()
         return self.parse(html=r.html)
 
+    @staticmethod
+    def brand_parse(element):
+        brand_element = element.find("#brand", containing="By", first=True)
+        if brand_element:
+            return brand_element.find("span", first=True).text
+
+    @staticmethod
+    def clearance_parse(element):
+        if element.find(".product-flag-clearance", containing="clearance", first=True):
+            return True
+        return False
+
+    @staticmethod
+    def iherb_exclusive_parse(element):
+        if element.find(".product-flag-i-herb-exclusive", containing="iHerb Exclusive", first=True):
+            return True
+        return False
+
+    @staticmethod
+    def special_parse(element):
+        if element.find(".product-flag-special", containing="Special", first=True):
+            return True
+        return False
+
+    @staticmethod
+    def best_seller_parse(element):
+        if element.find(".product-best-seller", containing="Best Seller", first=True):
+            return True
+        return False
+
+    @staticmethod
+    def loyalty_credit_parse(element):
+        if element.find(".slanted-container", containing="Loyalty Credit", first=True):
+            loyalty_credit_element = element.find(".slanted-container", containing="Loyalty Credit", first=True)
+            if loyalty_credit_element:
+                return int(loyalty_credit_element.text[:loyalty_credit_element.text.find("% Loyalty Credit")])
+        return 0
+
+    @staticmethod
+    def in_stock_parse(element):
+        if element.find(".text-danger", containing="Out of Stock", first=True):
+            return False
+        elif element.find(".text-primary", containing="In Stock", first=True):
+            return True
+        return False  # if unsure assume out of stock
+
+    @staticmethod
+    def free_shipping_over_parse(element):
+        free_shipping_over_element = element.find(".text-uppercase", containing="Free Shipping", first=True)
+        if free_shipping_over_element:
+            return int(free_shipping_over_element.find("bdi", first=True)[1:])
+
+    @staticmethod
+    def upc_parse(element):
+        upc_element = element.find("li", containing="UPC Code", first=True)
+        if upc_element:
+            return upc_element.text[upc_element.text.find(": ") + 2:]
+
+    @staticmethod
+    def expiration_date_parse(element):
+        expiration_date_element = element.find("li", containing="Expiration Date", first=True)
+        if expiration_date_element:
+            expiration_date = parse_html_text_btw(expiration_date_element.text, "\n?\n", "\n")
+            return datetime.datetime.strptime(expiration_date, "%B %Y")
+
+    @staticmethod
+    def shipping_weight_parse(element):
+        shipping_weight_element = element.find("li", containing="Shipping Weight", first=True)
+        if shipping_weight_element:
+            shipping_weight, shipping_unit = parse_html_text_btw(shipping_weight_element.text, "\n?\n", "\n").split()
+            if shipping_unit == "lbs":
+                return float(shipping_weight)
+
+    @staticmethod
+    def package_qty_parse(element):
+        package_qty_element = element.find("li", containing="Package Quantity", first=True)
+        if package_qty_element:
+            return package_qty_element.text[package_qty_element.text.find(": ") + 2:]
+
+    @staticmethod
+    def dimensions_parse(element):
+        dimensions_element = element.find("li", containing="Dimensions", first=True)
+        if dimensions_element:
+            return parse_html_text_btw(dimensions_element.text, "\n", "\n")
+
     def parse(self, html: HTML) -> "Product":
 
         product = html.find("#product-specs-list", first=True)
 
-        brand_element = product.find("#brand", containing="By", first=True)
-        if brand_element:
-            self.brand = brand_element.find("span", first=True).text
+        # todo price
 
-        if product.find(".product-flag-clearance", containing="clearance", first=True):
-            self.clearance = True
-        else:
-            self.clearance = False
+        # todo url
 
-        if product.find(".product-flag-i-herb-exclusive", containing="iHerb Exclusive", first=True):
-            self.iherb_exclusive = True
-        else:
-            self.iherb_exclusive = False
+        # todo title
 
-        if product.find(".product-flag-special", containing="Special", first=True):
-            self.special = True
-        else:
-            self.special = False
+        # todo price discount
 
-        if product.find(".product-best-seller", containing="Best Seller", first=True):
-            self.best_seller = True
-        else:
-            self.best_seller = False
+        # todo shipping saver
 
-        if product.find(".slanted-container", containing="Loyalty Credit", first=True):
-            loyalty_credit_element = product.find(".slanted-container", containing="Loyalty Credit", first=True)
-            self.loyalty_credit = int(loyalty_credit_element.text[:loyalty_credit_element.text.find(
-                "% Loyalty Credit")])
+        self.iherb_exclusive = self.iherb_exclusive_parse(product)
 
-        if product.find(".text-danger", containing="Out of Stock", first=True):
-            self.in_stock = False
-        elif product.find(".text-primary", containing="In Stock", first=True):
-            self.in_stock = True
+        # todo save in cart
 
-        free_shipping_over_element = product.find(".text-uppercase", containing="Free Shipping", first=True)
-        if free_shipping_over_element:
-            self.free_shipping_over = int(free_shipping_over_element.find("bdi", first=True)[1:])
+        self.in_stock = self.in_stock_parse(product)
 
-        upc_element = product.find("li", containing="UPC Code", first=True)
-        if upc_element:
-            self.upc = upc_element.text[upc_element.text.find(": ") + 2:]
+        self.special = self.special_parse(product)
 
-        expiration_date_element = product.find("li", containing="Expiration Date", first=True)
-        if expiration_date_element:
-            expiration_date = parse_html_text_btw(expiration_date_element.text, "\n?\n", "\n")
-            self.expiration_date = datetime.datetime.strptime(expiration_date, "%B %Y")
+        # todo trial product
 
-        shipping_weight_element = product.find("li", containing="Shipping Weight", first=True)
-        if shipping_weight_element:
-            shipping_weight, shipping_unit = parse_html_text_btw(shipping_weight_element.text, "\n?\n", "\n").split()
-            if shipping_unit == "lbs":
-                self.shipping_weight = float(shipping_weight)
+        # todo rating count
 
-        package_qty_element = product.find("li", containing="Package Quantity", first=True)
-        if package_qty_element:
-            self.package_qty = package_qty_element.text[package_qty_element.text.find(": ") + 2:]
+        # todo stars
 
-        dimensions_element = product.find("li", containing="Dimensions", first=True)
-        if dimensions_element:
-            self.dimensions = parse_html_text_btw(dimensions_element.text, "\n", "\n")
+        self.clearance = self.clearance_parse(product)
+
+        self.best_seller = self.best_seller_parse(product)
+
+        self.loyalty_credit = self.loyalty_credit_parse(product)
+
+        self.free_shipping_over = self.free_shipping_over_parse(product)
+
+        self.brand = self.brand_parse(product)
+
+        self.upc = self.upc_parse(product)
+
+        self.expiration_date = self.expiration_date_parse(product)
+
+        self.shipping_weight = self.shipping_weight_parse(product)
+
+        self.package_qty = self.package_qty_parse(product)
+
+        self.dimensions = self.dimensions_parse(product)
 
         return self
