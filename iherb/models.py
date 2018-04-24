@@ -4,7 +4,7 @@ from iherb.products import Product
 from iherb.categories import Category
 
 
-def iherb_products(category: str, limit: int = 0) -> Generator[None, Product, None]:
+def iherb_products(category: str, limit: int = 0) -> Generator[Product, None, None]:
     """
     yield a populated product from a given category
 

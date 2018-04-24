@@ -4,7 +4,7 @@ iherb
 
 Get products from iHerb.
 
-This library was created to test out requests-html as well as learn about 'yield' vs 'return'.
+This library was created to test out requests-html, learn about 'yield' vs 'return' and type hinting.
 
 Usage
 =====

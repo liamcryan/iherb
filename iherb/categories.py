@@ -1,10 +1,11 @@
+from typing import Optional
 from requests_html import HTML, Element
 
 from iherb.products import Product
 from iherb.url import IHerbURL
 
 
-def get_next(html: HTML, next_symbol):
+def get_next(html: HTML, next_symbol: None) -> Optional[str]:
     url = html.find('.pagination-next', first=True).attrs['href']
     if url:
         return url
@@ -44,7 +45,7 @@ class Category(object):
             yield Category.parse(html=html)
 
     @staticmethod
-    def parse(html: HTML):
+    def parse(html: HTML) -> Generator:
         for product in html.find(".product-inner"):
             # yield Category._parse_one(product)
             url = [i for i in list(product.absolute_links) if "?" not in i][0]
