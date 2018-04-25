@@ -12,7 +12,7 @@ Usage
 .. code-block:: pycon
 
     >>> import iherb
-    >>> for product in iherb.supplements(limit=5):
+    >>> for product in iherb.supplements(limit=5, minimize_footprint=True):
     ...     print(product)
 
 iHerb has many categories and there is an api to obtain products from each of them.

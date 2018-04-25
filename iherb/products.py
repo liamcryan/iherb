@@ -63,45 +63,57 @@ class Product(object):
         return self.parse(html=r.html)
 
     @staticmethod
-    def brand_parse(element: Element) -> str:
+    def title_parse(element: Element) -> Optional[str]:
+        title_element = element.find(".product-title", first=True)
+        if title_element:
+            return element.find(".product-title", first=True).text
+
+    @staticmethod
+    def price_parse(element: Element) -> Optional[float]:
+        if element.find("discount-green", first=True):
+            if element.find(".price-olp", first=True):
+                return float(element.find(".price-olp", first=True).text[1:])
+        elif element.find(".price", first=True):
+            return float(element.find(".price", first=True).text[1:])
+
+    @staticmethod
+    def price_discount_parse(element: Element) -> Optional[float]:
+        if element.find("discount-green", first=True):
+            if element.find(".discount-green", first=True):
+                return float(element.find(".discount-green", first=True).text[1:])
+        elif element.find(".price", first=True):
+            return float(element.find(".price", first=True).text[1:])
+
+    @staticmethod
+    def brand_parse(element: Element) -> Optional[str]:
         brand_element = element.find("#brand", containing="By", first=True)
         if brand_element:
             return brand_element.find("span", first=True).text
 
     @staticmethod
-    def clearance_parse(element: Element) -> bool:
-        if element.find(".product-flag-clearance", containing="clearance", first=True):
-            return True
-        return False
-
-    @staticmethod
-    def iherb_exclusive_parse(element: Element) -> bool:
+    def iherb_exclusive_parse(element: Element) -> Optional[bool]:
         if element.find(".product-flag-i-herb-exclusive", containing="iHerb Exclusive", first=True):
             return True
-        return False
 
     @staticmethod
-    def special_parse(element: Element) -> bool:
+    def special_parse(element: Element) -> Optional[bool]:
         if element.find(".product-flag-special", containing="Special", first=True):
             return True
-        return False
 
     @staticmethod
-    def best_seller_parse(element: Element) -> bool:
+    def best_seller_parse(element: Element) -> Optional[bool]:
         if element.find(".product-best-seller", containing="Best Seller", first=True):
             return True
-        return False
 
     @staticmethod
-    def loyalty_credit_parse(element: Element) -> int:
+    def loyalty_credit_parse(element: Element) -> Optional[int]:
         if element.find(".slanted-container", containing="Loyalty Credit", first=True):
             loyalty_credit_element = element.find(".slanted-container", containing="Loyalty Credit", first=True)
             if loyalty_credit_element:
                 return int(loyalty_credit_element.text[:loyalty_credit_element.text.find("% Loyalty Credit")])
-        return 0
 
     @staticmethod
-    def in_stock_parse(element: Element) -> bool:
+    def in_stock_parse(element: Element) -> Optional[bool]:
         if element.find(".text-danger", containing="Out of Stock", first=True):
             return False
         elif element.find(".text-primary", containing="In Stock", first=True):
@@ -146,52 +158,76 @@ class Product(object):
         if dimensions_element:
             return parse_html_text_btw(dimensions_element.text, "\n", "\n")
 
+    @staticmethod
+    def shipping_saver_parse(element: Element) -> Optional[bool]:
+        if element.find(".shipping-saver", containing="Shipping Saver", first=True):
+            return True
+
+    @staticmethod
+    def save_in_cart_parse(element: Element) -> Optional[int]:
+        if element.find("title", containing="in Cart", first=True):
+            save_in_cart_element = element.find("title", containing="in Cart", first=True)
+            return int(parse_html_text_btw(save_in_cart_element.text, "Save ", "% in Cart"))
+
+    @staticmethod
+    def rating_count_parse(element: Element) -> Optional[int]:
+        if element.find(".rating-count", first=True):
+            rating_count_element = element.find(".rating-count", first=True)
+            return int(rating_count_element.find("span", first=True).text)
+
+    @staticmethod
+    def stars_parse(element: Element) -> Optional[float]:
+        star_len = len("M83.436 10.871c-0.070-0.216-0.271-0.363-0.497-0.363h-9.501l-2.941-9.084c-0.071-0.216-0.271-0.36"
+                       "3-0.497-0.364-0.225 0-0.426 0.147-0.496 0.362l-2.958 9.085h-9.484c-0.226 0-0.428 0.148-0.498 0."
+                       "363s0.008 0.454 0.189 0.588l7.676 5.623-2.957 9.135c-0.070 0.216 0.006 0.454 0.19 0.589 0.183 0"
+                       ".133 0.431 0.133 0.614 0l7.725-5.641 7.709 5.641c0.092 0.067 0.199 0.101 0.307 0.101 0.107 0 0."
+                       "215-0.033 0.307-0.101 0.184-0.135 0.26-0.371 0.19-0.589l-2.958-9.134 7.692-5.623c0.183-0.133 0."
+                       "259-0.371 0.19-0.588z")
+
+        if element.find("#icon-stars_45"):
+            stars_element_container = element.find("#icon-stars_45")
+            if stars_element_container.find("path"):  # get length of d
+                stars_elements = stars_element_container.find("path")  # get the length of d
+                stars = 0
+                for star_element in stars_elements:
+                    stars += len(star_element.attrs["d"]) / star_len
+                return stars
+
+    @staticmethod
+    def trial_product_parse(element: Element) -> Optional[bool]:
+        if element.find(".product-flag-trial", containing="Trial Product", first=True):
+            return True
+
+    @staticmethod
+    def clearance_parse(element: Element) -> Optional[bool]:
+        if element.find(".product-flag-clearance", containing="Clearance", first=True):
+            return True
+
     def parse(self, html: HTML) -> "Product":
 
         product = html.find("#product-specs-list", first=True)
 
-        # todo price
-
-        # todo url
-
-        # todo title
-
-        # todo price discount
-
-        # todo shipping saver
-
+        self.title = self.title_parse(product)
+        self.price = self.price_parse(product)
+        self.price_discount = self.price_discount_parse(product)
+        self.shipping_saver = self.shipping_saver_parse(product)
         self.iherb_exclusive = self.iherb_exclusive_parse(product)
-
-        # todo save in cart
-
-        self.in_stock = self.in_stock_parse(product)
-
-        self.special = self.special_parse(product)
-
-        # todo trial product
-
-        # todo rating count
-
-        # todo stars
-
-        self.clearance = self.clearance_parse(product)
-
-        self.best_seller = self.best_seller_parse(product)
-
-        self.loyalty_credit = self.loyalty_credit_parse(product)
-
         self.free_shipping_over = self.free_shipping_over_parse(product)
-
+        self.save_in_cart = self.save_in_cart_parse(product)
+        self.in_stock = self.in_stock_parse(product)
+        self.special = self.special_parse(product)
+        self.trial_product = self.trial_product_parse(product)
+        self.rating_count = self.rating_count_parse(product)
+        self.stars = self.stars_parse(product)
+        self.clearance = self.clearance_parse(product)
+        self.best_seller = self.best_seller_parse(product)
+        self.loyalty_credit = self.loyalty_credit_parse(product)
+        self.free_shipping_over = self.free_shipping_over_parse(product)
         self.brand = self.brand_parse(product)
-
         self.upc = self.upc_parse(product)
-
         self.expiration_date = self.expiration_date_parse(product)
-
         self.shipping_weight = self.shipping_weight_parse(product)
-
         self.package_qty = self.package_qty_parse(product)
-
         self.dimensions = self.dimensions_parse(product)
 
         return self
