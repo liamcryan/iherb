@@ -11,20 +11,22 @@ class Product(object):
                  url: str,
                  title: Optional[str] = None,
                  price: Optional[float] = None,
+                 showcase_image: Optional[float] = None,
                  price_discount: Optional[float] = None,
                  shipping_saver: Optional[bool] = None,
                  iherb_exclusive: Optional[bool] = None,
-                 save_in_cart: Optional[int] = None,
+                 save_x_percent_in_cart: Optional[int] = None,
                  in_stock: Optional[bool] = None,
                  special: Optional[bool] = None,
                  trial_product: Optional[bool] = None,
                  rating_count: Optional[int] = None,
                  stars: Optional[float] = None,
                  clearance: Optional[bool] = None,
-                 free_shipping_over: Optional[int] = None,
+                 free_shipping_over_x_dollars: Optional[int] = None,
                  best_seller: Optional[bool] = None,
-                 loyalty_credit: Optional[int] = None,
+                 loyalty_credit_x_percent: Optional[int] = None,
                  brand: Optional[str] = None,
+                 product_code: Optional[str] = None,
                  upc: Optional[str] = None,
                  expiration_date: Optional[datetime.datetime] = None,
                  shipping_weight: Optional[float] = None,
@@ -34,10 +36,11 @@ class Product(object):
         self.title = title
         self.url = url
         self.price = price
+        self.showcase_image = showcase_image
         self.price_discount = price_discount
         self.shipping_saver = shipping_saver  # if True, better shipping prices
         self.iherb_exclusive = iherb_exclusive  # related to branding?
-        self.save_in_cart = save_in_cart  # save 10% in cart
+        self.save_x_percent_in_cart = save_x_percent_in_cart  # save 10% in cart
         self.in_stock = in_stock  # or out of stock
         self.special = special  # a special?
         self.trial_product = trial_product  # trial pricing?
@@ -45,9 +48,10 @@ class Product(object):
         self.stars = stars  # how many stars does product have
         self.clearance = clearance  # clearance?
         self.best_seller = best_seller
-        self.loyalty_credit = loyalty_credit  # percentage credit
-        self.free_shipping_over = free_shipping_over  # some dollar number
+        self.loyalty_credit_x_percent = loyalty_credit_x_percent  # percentage credit
+        self.free_shipping_over_x_dollars = free_shipping_over_x_dollars  # some dollar number
         self.brand = brand
+        self.product_code = product_code  # iherb special code
         self.upc = upc
         self.expiration_date = expiration_date
         self.shipping_weight = shipping_weight
@@ -66,7 +70,10 @@ class Product(object):
     def title_parse(element: Element) -> Optional[str]:
         title_element = element.find(".product-title", first=True)
         if title_element:
-            return element.find(".product-title", first=True).text
+            return title_element.text
+        title_element = element.find("#name", first=True)
+        if title_element:
+            return title_element.text
 
     @staticmethod
     def price_parse(element: Element) -> Optional[float]:
@@ -77,8 +84,14 @@ class Product(object):
             return float(element.find(".price", first=True).text[1:])
 
     @staticmethod
+    def showcase_image_parse(element: Element) -> Optional[str]:
+        showcase_image_element = element.find("img", first=True)
+        if showcase_image_element:
+            return showcase_image_element.attrs["src"]
+
+    @staticmethod
     def price_discount_parse(element: Element) -> Optional[float]:
-        if element.find("discount-green", first=True):
+        if element.find(".discount-green", first=True):
             if element.find(".discount-green", first=True):
                 return float(element.find(".discount-green", first=True).text[1:])
         elif element.find(".price", first=True):
@@ -106,7 +119,7 @@ class Product(object):
             return True
 
     @staticmethod
-    def loyalty_credit_parse(element: Element) -> Optional[int]:
+    def loyalty_credit_x_percent_parse(element: Element) -> Optional[int]:
         if element.find(".slanted-container", containing="Loyalty Credit", first=True):
             loyalty_credit_element = element.find(".slanted-container", containing="Loyalty Credit", first=True)
             if loyalty_credit_element:
@@ -120,16 +133,23 @@ class Product(object):
             return True
 
     @staticmethod
-    def free_shipping_over_parse(element: Element) -> Optional[int]:
-        free_shipping_over_element = element.find(".text-uppercase", containing="Free Shipping", first=True)
+    def free_shipping_over_x_dollars_parse(element: Element) -> Optional[int]:
+        free_shipping_over_element = element.find(".banner-alert", first=True)
         if free_shipping_over_element:
-            return int(free_shipping_over_element.find("bdi", first=True)[1:])
+            if "Free Shipping\xa0for orders over" in free_shipping_over_element.text:
+                return int(free_shipping_over_element.text[free_shipping_over_element.text.find("\n") + 2:])
 
     @staticmethod
     def upc_parse(element: Element) -> Optional[str]:
         upc_element = element.find("li", containing="UPC Code", first=True)
         if upc_element:
             return upc_element.text[upc_element.text.find(": ") + 2:]
+
+    @staticmethod
+    def product_code_parse(element: Element) -> Optional[str]:
+        product_code_element = element.find("li", containing="Product Code", first=True)
+        if product_code_element:
+            return product_code_element.text[product_code_element.text.find(": ") + 2:]
 
     @staticmethod
     def expiration_date_parse(element: Element) -> Optional[datetime.datetime]:
@@ -164,10 +184,10 @@ class Product(object):
             return True
 
     @staticmethod
-    def save_in_cart_parse(element: Element) -> Optional[int]:
+    def save_x_percent_in_cart_parse(element: Element) -> Optional[int]:
         if element.find("title", containing="in Cart", first=True):
-            save_in_cart_element = element.find("title", containing="in Cart", first=True)
-            return int(parse_html_text_btw(save_in_cart_element.text, "Save ", "% in Cart"))
+            save_x_percent_in_cart_element = element.find("title", containing="in Cart", first=True)
+            return int(parse_html_text_btw(save_x_percent_in_cart_element.text, "Save ", "% in Cart"))
 
     @staticmethod
     def rating_count_parse(element: Element) -> Optional[int]:
@@ -177,21 +197,10 @@ class Product(object):
 
     @staticmethod
     def stars_parse(element: Element) -> Optional[float]:
-        star_len = len("M83.436 10.871c-0.070-0.216-0.271-0.363-0.497-0.363h-9.501l-2.941-9.084c-0.071-0.216-0.271-0.36"
-                       "3-0.497-0.364-0.225 0-0.426 0.147-0.496 0.362l-2.958 9.085h-9.484c-0.226 0-0.428 0.148-0.498 0."
-                       "363s0.008 0.454 0.189 0.588l7.676 5.623-2.957 9.135c-0.070 0.216 0.006 0.454 0.19 0.589 0.183 0"
-                       ".133 0.431 0.133 0.614 0l7.725-5.641 7.709 5.641c0.092 0.067 0.199 0.101 0.307 0.101 0.107 0 0."
-                       "215-0.033 0.307-0.101 0.184-0.135 0.26-0.371 0.19-0.589l-2.958-9.134 7.692-5.623c0.183-0.133 0."
-                       "259-0.371 0.19-0.588z")
-
-        if element.find("#icon-stars_45"):
-            stars_element_container = element.find("#icon-stars_45")
-            if stars_element_container.find("path"):  # get length of d
-                stars_elements = stars_element_container.find("path")  # get the length of d
-                stars = 0
-                for star_element in stars_elements:
-                    stars += len(star_element.attrs["d"]) / star_len
-                return stars
+        stars_element = element.find(".stars", first=True)
+        if stars_element:
+            stars = stars_element.attrs["title"]
+            return float(stars[:stars.find("/5")])
 
     @staticmethod
     def trial_product_parse(element: Element) -> Optional[bool]:
@@ -205,29 +214,56 @@ class Product(object):
 
     def parse(self, html: HTML) -> "Product":
 
-        product = html.find("#product-specs-list", first=True)
+        # product = html.find("#product-specs-list", first=True)
+        product = html.find("body", first=True)
 
-        self.title = self.title_parse(product)
-        self.price = self.price_parse(product)
-        self.price_discount = self.price_discount_parse(product)
-        self.shipping_saver = self.shipping_saver_parse(product)
-        self.iherb_exclusive = self.iherb_exclusive_parse(product)
-        self.free_shipping_over = self.free_shipping_over_parse(product)
-        self.save_in_cart = self.save_in_cart_parse(product)
-        self.in_stock = self.in_stock_parse(product)
-        self.special = self.special_parse(product)
-        self.trial_product = self.trial_product_parse(product)
-        self.rating_count = self.rating_count_parse(product)
-        self.stars = self.stars_parse(product)
-        self.clearance = self.clearance_parse(product)
-        self.best_seller = self.best_seller_parse(product)
-        self.loyalty_credit = self.loyalty_credit_parse(product)
-        self.free_shipping_over = self.free_shipping_over_parse(product)
-        self.brand = self.brand_parse(product)
-        self.upc = self.upc_parse(product)
-        self.expiration_date = self.expiration_date_parse(product)
-        self.shipping_weight = self.shipping_weight_parse(product)
-        self.package_qty = self.package_qty_parse(product)
-        self.dimensions = self.dimensions_parse(product)
+        if self.title is None:
+            self.title = self.title_parse(product)
+        if self.price is None:
+            self.price = self.price_parse(product)
+        if self.price_discount is None:
+            self.price_discount = self.price_discount_parse(product)
+        if self.showcase_image is None:
+            self.showcase_image = self.showcase_image_parse(product)
+        if self.shipping_saver is None:
+            self.shipping_saver = self.shipping_saver_parse(product)
+        if self.iherb_exclusive is None:
+            self.iherb_exclusive = self.iherb_exclusive_parse(product)
+        if self.free_shipping_over_x_dollars is None:
+            self.free_shipping_over_x_dollars = self.free_shipping_over_x_dollars_parse(product)
+        if self.save_x_percent_in_cart is None:
+            self.save_x_percent_in_cart = self.save_x_percent_in_cart_parse(product)
+        if self.in_stock is None:
+            self.in_stock = self.in_stock_parse(product)
+        if self.special is None:
+            self.special = self.special_parse(product)
+        if self.trial_product is None:
+            self.trial_product = self.trial_product_parse(product)
+        if self.rating_count is None:
+            self.rating_count = self.rating_count_parse(product)
+        if self.stars is None:
+            self.stars = self.stars_parse(product)
+        if self.clearance is None:
+            self.clearance = self.clearance_parse(product)
+        if self.best_seller is None:
+            self.best_seller = self.best_seller_parse(product)
+        if self.loyalty_credit_x_percent is None:
+            self.loyalty_credit_x_percent = self.loyalty_credit_x_percent_parse(product)
+        if self.free_shipping_over_x_dollars is None:
+            self.free_shipping_over_x_dollars = self.free_shipping_over_x_dollars_parse(product)
+        if self.brand is None:
+            self.brand = self.brand_parse(product)
+        if self.upc is None:
+            self.upc = self.upc_parse(product)
+        if self.product_code is None:
+            self.product_code = self.product_code_parse(product)
+        if self.expiration_date is None:
+            self.expiration_date = self.expiration_date_parse(product)
+        if self.shipping_weight is None:
+            self.shipping_weight = self.shipping_weight_parse(product)
+        if self.package_qty is None:
+            self.package_qty = self.package_qty_parse(product)
+        if self.dimensions is None:
+            self.dimensions = self.dimensions_parse(product)
 
         return self

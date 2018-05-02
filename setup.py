@@ -5,7 +5,7 @@ DESCRIPTION = 'Get products from iHerb'
 URL = 'https://github.com/liamcryan/iherb'
 EMAIL = 'data.handyman.01@gmail.com'
 AUTHOR = 'Liam Cryan'
-VERSION = '0.0.0'
+VERSION = '0.0.1'
 LICENSE = "MIT"
 
 setup(name=NAME,

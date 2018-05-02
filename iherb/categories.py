@@ -1,5 +1,5 @@
 from typing import Optional
-from requests_html import HTML
+from requests_html import HTML, Element
 
 from iherb.products import Product
 from iherb.url import IHerbURL
@@ -41,21 +41,29 @@ class Category(object):
         response = iherb_category_url.get()
 
         for html in response.html:
-            print(html.url)
             yield Category.parse(html=html)
 
     @staticmethod
-    def parse(html: HTML):
-        for product in html.find(".product-inner"):
+    def parse_url(title: str, element: Element) -> str:
+        for i in list(element.absolute_links):
+            if title.replace(",", "").replace("'", " ").split()[0] in i and "?" not in i:
+                return i
+        for j in element.absolute_links:
+            print(j)
+        raise Exception("did not parse url")
 
-            url = [i for i in list(product.absolute_links) if "?" not in i][0]
+    @staticmethod
+    def parse(html: HTML):
+        for product in html.find(".product"):
+
             title = Product.title_parse(product)
+            url = Category.parse_url(title=title, element=product)
+            showcase_image = Product.showcase_image_parse(element=product)
             price_discount = Product.price_discount_parse(product)
             price = Product.price_parse(product)
-            free_shipping_over = Product.free_shipping_over_parse(product)
             shipping_saver = Product.shipping_saver_parse(product)
             iherb_exclusive = Product.iherb_exclusive_parse(product)
-            save_in_cart = Product.save_in_cart_parse(product)
+            save_in_cart = Product.save_x_percent_in_cart_parse(product)
             rating_count = Product.rating_count_parse(product)
             stars = Product.stars_parse(product)
             trial_product = Product.trial_product_parse(product)
@@ -65,12 +73,12 @@ class Category(object):
 
             yield Product(url=url,
                           title=title,
+                          showcase_image=showcase_image,
                           price_discount=price_discount,
                           price=price,
-                          free_shipping_over=free_shipping_over,
                           shipping_saver=shipping_saver,
                           iherb_exclusive=iherb_exclusive,
-                          save_in_cart=save_in_cart,
+                          save_x_percent_in_cart=save_in_cart,
                           rating_count=rating_count,
                           stars=stars,
                           trial_product=trial_product,
