@@ -1,6 +1,3 @@
-from typing import Generator
-
-from iherb.products import Product
 from iherb.models import iherb_products
 
 

@@ -1,5 +1,4 @@
 from iherb.categories import Category
-from iherb.url import IHerbURL
 
 
 def iherb_products(category: str, limit: int, product_details: bool):
