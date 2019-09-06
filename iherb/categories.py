@@ -1,19 +1,37 @@
-from typing import Optional
-from requests_html import HTML, Element
+from requests_html import HTML, Element, _NextSymbol, DEFAULT_NEXT_SYMBOL, _Next
 
 from iherb.products import Product
 from iherb.url import IHerbURL
 
 
-def get_next(html: HTML, next_symbol: None) -> Optional[str]:
-    url = html.find('.pagination-next', first=True).attrs['href']
-    if url:
-        return url
+# this is the HTML.next method of requests_html with get_next changed
+def next(self, fetch: bool = False, next_symbol: _NextSymbol = DEFAULT_NEXT_SYMBOL) -> _Next:
+    """Attempts to find the next page, if there is one. If ``fetch``
+    is ``True`` (default), returns :class:`HTML <HTML>` object of
+    next page. If ``fetch`` is ``False``, simply returns the next URL.
+    """
+
+    def get_next():
+        url = self.find('.pagination-next', first=True).attrs['href']
+        if url:
+            return url
+        else:
+            return None
+
+    __next = get_next()
+    if __next:
+        url = self._make_absolute(__next)
     else:
         return None
 
+    if fetch:
+        return self.session.get(url)
+    else:
+        return url
 
-HTML.get_next = get_next
+
+# using the altered next function instead of the regular HTML.next method
+HTML.next = next
 
 
 class Category(object):
@@ -55,7 +73,6 @@ class Category(object):
     @staticmethod
     def parse(html: HTML):
         for product in html.find(".product"):
-
             title = Product.title_parse(product)
             url = Category.parse_url(title=title, element=product)
             showcase_image = Product.showcase_image_parse(element=product)
