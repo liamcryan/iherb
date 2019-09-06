@@ -32,7 +32,7 @@ Installation
 
 .. code-block::
 
-    pip install git+https://github.com/liamcryan/requests-html.git
+    pip install git+https://github.com/liamcryan/iherb.git
 
 
 iherb robots.txt file
