@@ -4,6 +4,16 @@ iherb
 
 Get products & details from iHerb.
 
+One year later
+==============
+
+It's been a year since this library was written.  Amazingly it still works.  However, there is a caveat
+in which some of the attributes scraped return None.  This is because iherb has likely been changing the
+placement of their product details.
+
+Also, if you run into a SSL error, you can comment out line 6 in url.py.
+
+
 Usage
 =====
 
@@ -23,14 +33,6 @@ Installation
 .. code-block::
 
     pip install git+https://github.com/liamcryan/requests-html.git
-    pip install git+https://github.com/liamcryan/iherb.git
-
-Notes
-=====
-
-* I could not seem to properly specify dependency_link in setup.py file, hence the need for 2 pip installs.
-* The version of requests-html is a fork of the original requests-html library.  Slight modifications have been made
-  because requests-html was not paginating correctly.
 
 
 iherb robots.txt file

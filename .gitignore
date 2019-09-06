@@ -2,3 +2,4 @@
 venv/
 iherb.egg-info/
 dist/
+*pyc
